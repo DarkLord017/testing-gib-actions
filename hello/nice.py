@@ -12,5 +12,5 @@ function_definition = f'getPair({arguments})'
 function_signature = '0x' + keccak(text=function_definition).hex()[:8]
 
 function_signature
-
+#OK OK 
 print(function_signature)
