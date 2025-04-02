@@ -1,0 +1,45 @@
+name: Restrict Directory Changes
+
+on:
+  pull_request:
+    branches:
+      - main  # Adjust branch as needed
+
+jobs:
+  check-directories:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get Changed Files
+        id: changed-files
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
+          echo "$CHANGED_FILES" > changed_files.txt
+
+      - name: Validate Changed Files
+        run: |
+          # Allowed directories (adjust as needed)
+          ALLOWED_DIRS=("hello/")
+
+          # Check for unauthorized changes
+          while read -r file; do
+            valid=false
+            for dir in "${ALLOWED_DIRS[@]}"; do
+              if [[ "$file" == "$dir"* ]]; then
+                valid=true
+                break
+              fi
+            done
+            if [ "$valid" = false ]; then
+              echo "❌ Unauthorized change detected: $file"
+              exit 1
+            fi
+          done < changed_files.txt
+
+      - name: Success Message
+        if: success()
+        run: echo "✅ All changes are within allowed directories."
